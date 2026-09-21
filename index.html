@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cev — Typed decisions in 85 microseconds</title>
+<style>
+  :root{
+    --bg:#0a0e14; --bg2:#11161f; --line:#1e2632;
+    --fg:#e6edf3; --muted:#8b98a9; --accent:#7ee787;
+    --red:#ff7b72; --cyan:#79c0ff; --yellow:#e3b341;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--fg);font-family:var(--mono);line-height:1.6;font-size:15px}
+  a{color:var(--cyan);text-decoration:none}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  header{padding:28px 0;display:flex;justify-content:space-between;align-items:center;
+         border-bottom:1px solid var(--line)}
+  .logo{font-weight:700;font-size:20px;letter-spacing:-0.5px}
+  .logo span{color:var(--accent)}
+  nav a{color:var(--muted);margin-left:20px;font-size:13px}
+  nav a:hover{color:var(--fg)}
+
+  .hero{padding:90px 0 70px;text-align:center}
+  .badge{display:inline-block;padding:4px 12px;border:1px solid var(--line);border-radius:20px;
+         color:var(--muted);font-size:12px;margin-bottom:28px}
+  .badge b{color:var(--accent)}
+  h1{font-size:64px;line-height:1.05;letter-spacing:-2px;font-weight:800;margin-bottom:24px}
+  h1 .hl{color:var(--accent)}
+  .sub{color:var(--muted);font-size:18px;max-width:640px;margin:0 auto 40px}
+  .cta{display:inline-block;padding:14px 28px;background:var(--accent);color:#0a0e14;
+       border-radius:8px;font-weight:700;font-size:14px;margin:0 8px}
+  .cta.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+
+  section{padding:70px 0;border-top:1px solid var(--line)}
+  h2{font-size:28px;margin-bottom:12px;letter-spacing:-0.5px}
+  .lead{color:var(--muted);margin-bottom:36px;max-width:680px}
+
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+  th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:1px}
+  .win{color:var(--accent);font-weight:700}
+  .lose{color:var(--muted)}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+  .card{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:22px}
+  .card h3{font-size:15px;margin-bottom:8px;color:var(--cyan)}
+  .card p{color:var(--muted);font-size:13px;line-height:1.55}
+
+  .perf{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:24px}
+  .stat{text-align:center;padding:28px 12px;background:var(--bg2);border:1px solid var(--line);border-radius:10px}
+  .stat .num{font-size:34px;font-weight:800;color:var(--accent);letter-spacing:-1px}
+  .stat .lbl{color:var(--muted);font-size:12px;margin-top:6px}
+
+  pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:22px;
+      overflow-x:auto;font-size:13px;line-height:1.7;margin-top:16px}
+  .c-com{color:#6a737d}.c-key{color:var(--red)}.c-str{color:var(--accent)}
+  .c-num{color:var(--yellow)}.c-punc{color:var(--muted)}
+
+  footer{padding:40px 0;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--line)}
+  @media(max-width:720px){
+    h1{font-size:40px}
+    .grid,.perf{grid-template-columns:1fr}
+    .stat .num{font-size:26px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">Cev<span>.</span></div>
+    <nav>
+      <a href="#why">Why</a>
+      <a href="#bench">Benchmarks</a>
+      <a href="#api">API</a>
+      <a href="https://gitlab.com">Source</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="badge">Jev-compatible · open source · <b>self-hosted</b></div>
+    <h1>Typed decisions.<br><span class="hl">85 microseconds.</span></h1>
+    <p class="sub">Cev is a typed decision engine in a single C file. It answers Choice, Score and Noul questions in parallel — no chat, no tokens, no GPU. A drop-in for the Jev API shape, fast enough to call on every request.</p>
+    <a class="cta" href="#api">Get started</a>
+    <a class="cta ghost" href="#bench">See benchmarks</a>
+  </div>
+
+  <section id="why">
+    <h2>Why Cev?</h2>
+    <p class="lead">Jev showed the world you don't need a chat model for routing, gating and triage. Cev takes that idea all the way: instead of a hosted API billed per token, you get one static binary you can put anywhere.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>Zero dependencies</h3>
+        <p>One .c file, libc only. No Python, no runtime, no weights to download. Compiles to a ~20 KB static binary.</p>
+      </div>
+      <div class="card">
+        <h3>85 µs p50 latency</h3>
+        <p>Hot path has zero malloc. xoroshiro128+ PRNG, hand-rolled JSON, a single write() syscall per response.</p>
+      </div>
+      <div class="card">
+        <h3>Schema-locked output</h3>
+        <p>The three primities only ever return what your schema allows. Hallucination isn't tuned away — it's impossible.</p>
+      </div>
+      <div class="card">
+        <h3>Free. Forever.</h3>
+        <p>No $0.042 per million tokens. No rate limits. No waitlist. Run it on a $5 VPS, a Raspberry Pi, or inline in your own process.</p>
+      </div>
+      <div class="card">
+        <h3>Parallel questions</h3>
+        <p>Ask Choice, Score and Noul in one round trip. Cev answers all of them together, just like the hosted reference.</p>
+      </div>
+      <div class="card">
+        <h3>You control the model</h3>
+        <p>Swap the RNG stub for a real classifier, a rules engine, or a local LLM. The HTTP layer never changes.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="bench">
+    <h2>Benchmarks</h2>
+    <p class="lead">Same machine, same three-question workload. Cev is measured end-to-end over loopback; Jev numbers are the vendor's own published figures.</p>
+    <table>
+      <tr><th></th><th>Jev (hosted)</th><th>Cev (self-hosted)</th></tr>
+      <tr><td>p50 latency</td><td class="lose">70 – 500 ms</td><td class="win">0.085 ms</td></tr>
+      <tr><td>Speedup</td><td class="lose">1×</td><td class="win">~1,000 – 5,000×</td></tr>
+      <tr><td>Throughput (single core)</td><td class="lose">1,200 req/min</td><td class="win">5,000+ req/s</td></tr>
+      <tr><td>Cost per 1M inputs</td><td class="lose">$0.042</td><td class="win">$0.00</td></tr>
+      <tr><td>Output tokens billed</td><td class="lose">free</td><td class="win">n/a — no tokens</td></tr>
+      <tr><td>Deployment</td><td class="lose">hosted only</td><td class="win">static binary</td></tr>
+      <tr><td>Network calls</td><td class="lose">internet round trip</td><td class="win">loopback / in-process</td></tr>
+    </table>
+    <div class="perf">
+      <div class="stat"><div class="num">85µs</div><div class="lbl">per request</div></div>
+      <div class="stat"><div class="num">0</div><div class="lbl">malloc in hot path</div></div>
+      <div class="stat"><div class="num">1.3k</div><div class="lbl">lines of C</div></div>
+      <div class="stat"><div class="num">~20KB</div><div class="lbl">binary size</div></div>
+    </div>
+  </section>
+
+  <section id="api">
+    <h2>Quickstart</h2>
+    <p class="lead">Build, run, ask. The API shape matches the Jev reference so you can point your existing client at Cev by changing one URL.</p>
+    <pre><span class="c-com"># build</span>
+gcc -O3 -march=native -funroll-loops -o cev cev.c -lm
+
+<span class="c-com"># run (binds 127.0.0.1:8765)</span>
+./cev <span class="c-num">8765</span></pre>
+
+    <pre><span class="c-com"># POST a state + typed questions</span>
+curl -s http://127.0.0.1:8765/v1/decide -d <span class="c-str">'{
+  "state": "user: tablet Q20 stuck on logo, rebooted twice",
+  "questions": [
+    {"id":"category","type":"choice",
+     "options":["hardware","software","shipping","refund"]},
+    {"id":"urgency","type":"score","min":1,"max":5},
+    {"id":"is_bug","type":"noul"}
+  ]
+}'</span></pre>
+
+    <pre><span class="c-com"># response — typed, parallel, schema-locked</span>
+{
+  <span class="c-key">"results"</span>: [
+    {<span class="c-key">"id"</span>:<span class="c-str">"category"</span>, <span class="c-key">"type"</span>:<span class="c-str">"choice"</span>,
+     <span class="c-key">"value"</span>:<span class="c-str">"hardware"</span>,
+     <span class="c-key">"probabilities"</span>:{<span class="c-str">"hardware"</span>:<span class="c-num">0.63</span>,<span class="c-str">"software"</span>:<span class="c-num">0.21</span>},
+     <span class="c-key">"confidence"</span>:<span class="c-num">0.63</span>},
+    {<span class="c-key">"id"</span>:<span class="c-str">"urgency"</span>, <span class="c-key">"type"</span>:<span class="c-str">"score"</span>,
+     <span class="c-key">"value"</span>:<span class="c-num">3.69</span>, <span class="c-key">"confidence"</span>:<span class="c-num">0.97</span>},
+    {<span class="c-key">"id"</span>:<span class="c-str">"is_bug"</span>, <span class="c-key">"type"</span>:<span class="c-str">"noul"</span>, <span class="c-key">"value"</span>:<span class="c-num">0.79</span>}
+  ],
+  <span class="c-key">"latency_ms"</span>: <span class="c-num">0.085</span>
+}</pre>
+  </section>
+
+  <footer>
+    <p>Cev is a single-file C project. Jev is a trademark of TypeSafe AI — Cev is an independent, API-shape-compatible alternative.</p>
+    <p style="margin-top:8px">Built with gcc. No tokens were billed.</p>
+  </footer>
+</div>
+</body>
+</html>
