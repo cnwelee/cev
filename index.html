@@ -297,9 +297,20 @@ function qdExtract(q){
   q = (q||'').trim();
   let m = q.match(/^(.+?)\s+or\s+(.+?)\?\s*$/i);
   if(m) return [m[1].trim(), m[2].trim()];
-  m = q.match(/^(.+?)\s*[vs.]?\s*(.+?)\?\s*$/i);
+  m = q.match(/^(.+?)\s*[vV][sS.]\.?\s*(.+?)\?\s*$/i);
   if(m) return [m[1].trim(), m[2].trim()];
   return null;
+}
+function qdFallback(q){
+  const jokes = [
+    "I'm a decision engine, not a life coach 🤖",
+    "This is above my pay grade... flip a coin?",
+    "You're asking me? Bold.",
+    "Try: \"coffee or tea?\"",
+    "I make choices, not judgments",
+    "It's 3am, ask me tomorrow",
+  ];
+  return jokes[Math.floor(_f64()*jokes.length)];
 }
 function qdSet(s){
   document.getElementById('qd-input').value = s;
@@ -310,7 +321,8 @@ function qdAnswer(){
   const q = document.getElementById('qd-input').value;
   const opts = qdExtract(q);
   if(!opts || opts.length < 2){
-    out.innerHTML = '<span class="qd-placeholder">Try: "coffee or tea?"</span>';
+    out.innerHTML = '<div class="qd-answer" style="font-size:22px">🤔</div>'+
+      '<div class="qd-meta">'+qdFallback(q)+'</div>';
     return;
   }
   out.innerHTML = '<span class="qd-typing">thinking…</span>';
