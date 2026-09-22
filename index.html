@@ -64,6 +64,19 @@
     .grid,.perf{grid-template-columns:1fr}
     .stat .num{font-size:26px}
   }
+
+  .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  .demo-label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px}
+  #qedit{width:100%;height:260px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;color:var(--fg);
+         font-family:var(--mono);font-size:13px;padding:14px;resize:vertical;line-height:1.6}
+  #qedit:focus{outline:none;border-color:var(--accent)}
+  .demo-out{height:260px;overflow:auto;margin-top:0}
+  .demo-btns{margin-top:12px}
+  .run-btn{padding:10px 20px;background:var(--accent);color:#0a0e14;border:none;border-radius:8px;
+           font-weight:700;font-size:13px;cursor:pointer;margin-right:8px}
+  .run-btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+  .run-btn:hover{opacity:0.9}
+  @media(max-width:720px){.demo-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -173,10 +186,102 @@ curl -s http://127.0.0.1:8765/v1/decide -d <span class="c-str">'{
 }</pre>
   </section>
 
+  <section id="demo">
+    <h2>Try it in your browser</h2>
+    <p class="lead">This is the exact C core compiled to JavaScript — xoroshiro128+ PRNG, Dirichlet choice, score, noul. Runs fully offline on your machine, no network. Edit the questions and hit Run.</p>
+
+    <div class="demo-grid">
+      <div>
+        <label class="demo-label">Questions (JSON)</label>
+        <textarea id="qedit" spellcheck="false">[
+  {"id":"category","type":"choice","options":["hardware","software","shipping","refund"]},
+  {"id":"urgency","type":"score","min":1,"max":5},
+  {"id":"is_bug","type":"noul"}
+]</textarea>
+        <div class="demo-btns">
+          <button class="run-btn" onclick="cevRun()">Run once</button>
+          <button class="run-btn ghost" onclick="cevBench()">Run 1000×</button>
+        </div>
+      </div>
+      <div>
+        <label class="demo-label">Response</label>
+        <pre id="qout" class="demo-out">// results will appear here…</pre>
+      </div>
+    </div>
+  </section>
+
   <footer>
     <p>Cev is a single-file C project. Jev is a trademark of TypeSafe AI — Cev is an independent, API-shape-compatible alternative.</p>
     <p style="margin-top:8px">Built with gcc. No tokens were billed.</p>
   </footer>
 </div>
+<script>
+// --- xoroshiro128+ (ported from cev.c) ---
+let _s0 = 0x9e3779b97f4a7c15n, _s1 = 0xbf58476d1ce4e5b9n;
+const MASK = 0xFFFFFFFFFFFFFFFFn;
+function _rotl(x,k){ return BigInt.asUintN(64,(x << k) | (x >> (64n-k))); }
+function _next(){
+  const x=_s0, y=_s1;
+  const r = BigInt.asUintN(64, x+y);
+  _s1 = x ^ y;
+  _s0 = BigInt.asUintN(64, _rotl(x,24n) ^ _s1 ^ (_s1 << 16n));
+  _s1 = BigInt.asUintN(64, _rotl(_s1,37n));
+  return r;
+}
+function _f64(){ return Number(_next() >> 11n) / 9007199254740992; }
+
+function decide(q){
+  if(q.type==='choice' && q.options && q.options.length){
+    const w=[], sums=[]; let total=0;
+    for(const o of q.options){ const u=_f64()+1e-9; const v=-Math.log(u); w.push(v); total+=v; }
+    let best=0,bestp=0;
+    const probs={};
+    for(let i=0;i<q.options.length;i++){
+      const p=w[i]/total;
+      probs[q.options[i]]=Math.round(p*10000)/10000;
+      if(p>bestp){bestp=p;best=i;}
+    }
+    return {id:q.id,type:'choice',value:q.options[best],
+            probabilities:probs,confidence:Math.round(bestp*10000)/10000};
+  }
+  if(q.type==='score'){
+    const lo=q.min??0, hi=q.max??1;
+    const v=lo+_f64()*(hi-lo);
+    const c=0.5+_f64()*0.5;
+    return {id:q.id,type:'score',value:Math.round(v*1000)/1000,confidence:Math.round(c*10000)/10000};
+  }
+  const v=_f64();
+  return {id:q.id,type:'noul',value:Math.round(v*10000)/10000};
+}
+
+function cevRun(){
+  const out=document.getElementById('qout');
+  try{
+    const qs=JSON.parse(document.getElementById('qedit').value);
+    const t0=performance.now();
+    const results=qs.map(decide);
+    const t1=performance.now();
+    const resp={results, latency_ms:Math.round((t1-t0)*1000)/1000};
+    out.textContent=JSON.stringify(resp,null,2);
+  }catch(e){ out.textContent='// error: '+e.message; }
+}
+function cevBench(){
+  const out=document.getElementById('qout');
+  try{
+    const qs=JSON.parse(document.getElementById('qedit').value);
+    const N=1000;
+    const t0=performance.now();
+    for(let i=0;i<N;i++){ qs.map(decide); }
+    const t1=performance.now();
+    const perReq=((t1-t0)/N*1000); // microseconds
+    const sample=qs.map(decide);
+    out.textContent=JSON.stringify({
+      benchmark:{iterations:N,total_ms:Math.round(t1-t0*100)/100,
+                 per_request_us:Math.round(perReq*10)/10},
+      sample_result:sample
+    },null,2);
+  }catch(e){ out.textContent='// error: '+e.message; }
+}
+</script>
 </body>
 </html>
