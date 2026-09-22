@@ -119,9 +119,10 @@
     <p class="sub">Cev is a typed decision engine in a single C file. It answers Choice, Score and Noul questions in parallel — no chat, no tokens, no GPU. A drop-in for the Jev API shape, fast enough to call on every request.</p>
     <a class="cta" href="#api">Get started</a>
     <a class="cta ghost" href="#bench">See benchmarks</a>
+    <a class="cta ghost" onclick="toggleDemo()">Try it live</a>
   </div>
 
-  <div class="quickdemo">
+  <div class="quickdemo" id="quickdemo" style="display:none">
     <div class="qd-card">
       <div class="qd-title">⚡ Try it live</div>
       <div class="qd-inputrow">
@@ -293,6 +294,12 @@ function decide(q){
 }
 
 // --- quick demo: extract options from "A or B?" patterns ---
+function toggleDemo(){
+  const d = document.getElementById('quickdemo');
+  const show = d.style.display === 'none' || !d.style.display;
+  d.style.display = show ? 'block' : 'none';
+  if(show) d.scrollIntoView({behavior:'smooth', block:'center'});
+}
 function qdExtract(q){
   q = (q||'').trim();
   let m = q.match(/^(.+?)\s+or\s+(.+?)\?\s*$/i);
